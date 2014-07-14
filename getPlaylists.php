@@ -35,15 +35,6 @@ function removeDupes($playlist)
 #                     --- Main ---                      #
 #-------------------------------------------------------#
 #########################################################
-echo "<html>";
-echo "<head>";
-echo "<title>Mike's DeDupe for Rdio Playlists</title>";
-echo "</head>";
-echo "<body>";
-echo "<h2 align=\"center\">Welcome to the DeDupe Utility for Rdio</h2>";
-echo "<h4 align=\"center\">Powered by Rdio, made independently</h4>";
-
-
 # create an instance of the Rdio object with our consumer credentials
 $rdio = new Rdio(array(RDIO_CONSUMER_KEY, RDIO_CONSUMER_SECRET));
 
@@ -57,8 +48,6 @@ if ($_GET['logout']) {
   # and start again
   header('Location: '.$current_url);
 }
-
-echo "<h1>Session Oauth is " . $_SESSION['oauth_token'] . "</h1>";
 
 if ($_SESSION['oauth_token'] && $_SESSION['oauth_token_secret']) {
   # we have a token in our session, let's use it
@@ -77,10 +66,27 @@ if ($_SESSION['oauth_token'] && $_SESSION['oauth_token_secret']) {
   $currentUser = $rdio->call('currentUser');
   if ($currentUser) {
     echo "<h1><$currentUser->result->firstName . 's Playlists</h1>";
-  } else {
-    echo "<p>Uh oh</p>";
-  }
+  } 
+} else {
+  # we have no authentication tokens.
+  # ask the user to approve this app
+  $authorize_url = $rdio->begin_authentication($current_url);
+  # save the new token in our session
+  $_SESSION['oauth_token'] = $rdio->token[0];
+  $_SESSION['oauth_token_secret'] = $rdio->token[1];
+
+  header('Location: '. $authorize_url);
+  echo "<meta HTTP-EQUIV='REFRESH' content=\"0; URL=$current_url\">";
 }
+
+echo "<html>";
+echo "<head>";
+echo "<title>Mike's DeDupe for Rdio Playlists</title>";
+echo "</head>";
+echo "<body>";
+echo "<h2 align=\"center\">Welcome to the DeDupe Utility for Rdio</h2>";
+echo "<h4 align=\"center\">Powered by Rdio, made independently</h4>"; 
+
 /*
 # find out what playlists you created
 $myPlaylists = $rdio->call('getPlaylists')->result->owned;
@@ -106,6 +112,7 @@ foreach ($myPlaylists as $playlist) {
   $tracks[count($tracks)-1]['indArr'] = $indeces; 
 }
 */
-echo "</body>";
+echo "</body>
+";
 echo "</html>";
 ?>
